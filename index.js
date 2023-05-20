@@ -40,8 +40,9 @@ connection.connect((error) => {
     },
     apis: ['index.js'], // Reemplaza 'index.js' por el nombre de tu archivo principal de la API o los archivos donde tengas las anotaciones Swagger
   };
-  
+
 const specs = swaggerJsDoc(options);  
+
 
 app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
 /**
@@ -77,7 +78,7 @@ app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
-  connection.query('SELECT * FROM persona WHERE rut = ?', [rut], (error, results) => {
+  connection.query("SELECT p.rut  ,p.dv_rut  ,p.primer_nombre  ,p.ape_pat  ,p.ape_mat  ,p.fecha_nac  ,p.sexo  ,p.celular  ,p.direccion  ,p.correo  ,r.nombre 'Region'  ,c.nombre 'Ciudad'  ,co.nombre 'Comuna'  FROM   persona p  ,regiones r  ,ciudades c  ,provincias pr  ,comunas co  where   r.id = p.cod_region  and r.id = pr.id_region   and pr.id = c.id_provincia  and p.cod_provincia = pr.id  and p.cod_ciudad = c.id  and p.cod_comuna = co.id  and co.id_ciudad = c.id  and rut = ?", [rut], (error, results) => {
     if (error) {
       console.error('Error al obtener los registros: ', error);
       res.status(500).send('Error en el servidor');
