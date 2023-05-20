@@ -72,6 +72,9 @@ app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
  *         description: Error en el servidor
  */
 
+
+//datos personas
+
 app.get('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
   connection.query('SELECT * FROM persona WHERE rut = ?', [rut], (error, results) => {
@@ -83,6 +86,66 @@ app.get('/registros/:rut', (req, res) => {
     }
   });
 });
+
+/**
+ * @swagger
+ * /regiones:
+ *   get:
+ *     summary: Obtener regiones
+ *     description: Obtener la lista de regiones
+ *     tags: [Regiones]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
+
+//regiones
+app.get('/regiones', (req, res) => {
+  connection.query('SELECT * FROM regiones', (error, results) => {
+    if (error) {
+      console.error('Error al obtener los registros: ', error);
+      res.status(500).send('Error en el servidor');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+/**
+ * @swagger
+ * /provincias/{id_region}:
+ *   get:
+ *     summary: obtener provincias por region
+ *     description: obtener provincias por region
+ *     tags: [Regiones]
+ *     parameters:
+ *       - in: path
+ *         name: id_region
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: obtener provincias
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
+
+app.get('/provincias/:id_region', (req, res) => {
+  const id_region = req.params.id_region;
+  connection.query('SELECT * FROM provincias WHERE id_region = ?', [id_region],(error, results) => {
+    if (error) {
+      console.error('Error al obtener los registros: ', error);
+      res.status(500).send('Error en el servidor');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 
 app.listen(port, () => {
   console.log(`Servidor API escuchando en el puerto ${port}`);
