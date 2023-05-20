@@ -1,18 +1,23 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const app = express();
-const port = 4000; // Puedes usar cualquier otro puerto de tu elección
-//idp2023*
+// Importar variables de otro archivo
+const { port,port_db,urlbd,pwd,db } = require('./conf');
+const {obtieneDatosRut} = require('./querys');
 
 // Importar y configurar Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
 const connection = mysql.createConnection({
-    host: 'localhost', // Cambia esto si tu base de datos está en otro servidor
-    user: 'integracion',
-    password: 'idp2023*',
-    database: 'integracion'
+    host: urlbd, // Cambia esto si tu base de datos está en otro servidor
+    port: port_db,
+    user: 'root',
+    password: pwd,
+    database: db,
+    authPlugins: {
+      mysql_clear_password: () => () => Buffer.from(password + '\0')
+    }
   });
 
   app.use((req, res, next) => {
@@ -78,7 +83,7 @@ app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
-  connection.query("SELECT p.rut  ,p.dv_rut  ,p.primer_nombre  ,p.ape_pat  ,p.ape_mat  ,p.fecha_nac  ,p.sexo  ,p.celular  ,p.direccion  ,p.correo  ,r.nombre 'Region'  ,c.nombre 'Ciudad'  ,co.nombre 'Comuna'  FROM   persona p  ,regiones r  ,ciudades c  ,provincias pr  ,comunas co  where   r.id = p.cod_region  and r.id = pr.id_region   and pr.id = c.id_provincia  and p.cod_provincia = pr.id  and p.cod_ciudad = c.id  and p.cod_comuna = co.id  and co.id_ciudad = c.id  and rut = ?", [rut], (error, results) => {
+  connection.query(obtieneDatosRut, [rut], (error, results) => {
     if (error) {
       console.error('Error al obtener los registros: ', error);
       res.status(500).send('Error en el servidor');
