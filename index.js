@@ -3,6 +3,11 @@ const mysql = require('mysql');
 const app = express();
 const port = 4000; // Puedes usar cualquier otro puerto de tu elección
 //idp2023*
+
+// Importar y configurar Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
+
 const connection = mysql.createConnection({
     host: 'localhost', // Cambia esto si tu base de datos está en otro servidor
     user: 'integracion',
@@ -24,7 +29,48 @@ connection.connect((error) => {
     }
   });
 
-//get  
+  const options = {
+    swaggerDefinition: {
+      openapi: '3.0.0',
+      info: {
+        title: 'API Documentation',
+        version: '1.0.0',
+        description: 'Documentación de mi API REST',
+      },
+    },
+    apis: ['index.js'], // Reemplaza 'index.js' por el nombre de tu archivo principal de la API o los archivos donde tengas las anotaciones Swagger
+  };
+  
+const specs = swaggerJsDoc(options);  
+
+app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
+/**
+ * @swagger
+ * tags:
+ *   name: Registros
+ *   description: API para operaciones de registros
+ */
+/**
+ * @swagger
+ * /registros/{rut}:
+ *   get:
+ *     summary: Obtener registros por RUT
+ *     description: Obtener registros filtrados por el RUT proporcionado
+ *     operationId: obtenerRegistrosPorRUT
+ *     tags: [Registros]
+ *     parameters:
+ *       - in: path
+ *         name: rut
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: RUT para filtrar los registros
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
 
 app.get('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
