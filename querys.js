@@ -1,9 +1,10 @@
 //Persona
 const obtieneDatosRut= "SELECT p.rut  ,p.dv_rut  ,p.primer_nombre  ,p.ape_pat  ,p.ape_mat  ,date_format(p.fecha_nac,'%d/%m/%Y') 'Fecha Nac'  ,p.sexo  ,p.celular  ,p.direccion  ,p.correo  ,r.nombre 'Region'  ,c.nombre 'Ciudad'  ,co.nombre 'Comuna'  FROM   persona p  ,Regiones r  ,Ciudades c  ,Provincias pr  ,Comunas co  where   r.id = p.cod_region  and r.id = pr.id_region   and pr.id = c.id_provincia  and p.cod_provincia = pr.id  and p.cod_ciudad = c.id  and p.cod_comuna = co.id  and co.id_ciudad = c.id  and rut = ?";
-
-const actualizaDatosxRut = "UPDATE persona SET primer_nombre = ?, ape_pat = ?, ape_mat = ?, celular = ?, direccion = ? WHERE rut = ?";
+const obtieneDatos= "SELECT * FROM integracion.persona";
+const actualizaDatosxRut = 'UPDATE persona SET primer_nombre = ?, ape_pat = ?, ape_mat = ?, celular = ?, direccion = ? WHERE rut = ?';
 const deleteDatos = "DELETE FROM persona WHERE rut = ?";
-
+const insertDatos = 'INSERT INTO persona (rut, dv_rut, primer_nombre, segundo_nombre, ape_pat, ape_mat, fecha_nac, sexo, celular, direccion, cod_region, cod_ciudad, cod_provincia, cod_comuna, correo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+ 
 //Regiones
 const obtieneRegion = "SELECT r.id, r.nombre FROM regiones r";
 const obtieneProvincia = "SELECT pr.id, pr.nombre FROM provincias pr WHERE pr.id_region = ?";
@@ -18,5 +19,7 @@ module.exports = {
     obtieneCiudad,
     obtieneComuna,
     actualizaDatosxRut,
-    deleteDatos
+    deleteDatos,
+    obtieneDatos,
+    insertDatos
   };

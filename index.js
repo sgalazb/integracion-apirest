@@ -1,24 +1,18 @@
 const express = require('express');
 const mysql = require('mysql2');
+const bodyParser = require('body-parser');
 const app = express();
 // Importar variables de otro archivo
 const { port,port_db,urlbd,pwd,db } = require('./conf');
-const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  obtieneCiudad,  obtieneComuna,  actualizaDatosxRut,  deleteDatos} = require('./querys');
-
+const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  actualizaDatosxRut,  deleteDatos, obtieneDatos, insertDatos} = require('./querys');
 // Importar y configurar Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-
-const bodyParser = require('body-parser');
-
 // Configurar body-parser
+//app.use(bodyParser.urlencoded({ extended: true }));
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  console.log('Received request:', req.method, req.url, req.body);
-  next();
-});
 
 const connection = mysql.createConnection({
     host: urlbd, // Cambia esto si tu base de datos está en otro servidor
@@ -34,6 +28,11 @@ const connection = mysql.createConnection({
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
+
+  app.use((req, res, next) => {
+    console.log('Received request:', req.method, req.url, req.body);
     next();
   });
   
@@ -57,8 +56,7 @@ connection.connect((error) => {
     apis: ['index.js'], // Reemplaza 'index.js' por el nombre de tu archivo principal de la API o los archivos donde tengas las anotaciones Swagger
   };
 
-const specs = swaggerJsDoc(options);  
-
+const specs = swaggerJsDoc(options); 
 
 app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
 /**
@@ -67,6 +65,34 @@ app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
  *   name: Registros
  *   description: API para operaciones de registros
  */
+/**
+ * @swagger
+ * /registros:
+ *   get:
+ *     summary: Obtener registros de Personas
+ *     description: Obtener registros
+ *     operationId: obtenerRegistros
+ *     tags: [Registros]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
+
+
+//datos personas
+app.get('/registros', (req, res) => {
+  connection.query(obtieneDatos, (error, results) => {
+    if (error) {
+      console.error('Error al obtener los registros: ', error);
+      res.status(500).send('Error en el servidor');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 /**
  * @swagger
  * /registros/{rut}:
@@ -91,7 +117,6 @@ app.use('/apis', swaggerUi.serve, swaggerUi.setup(specs));
 
 
 //datos personas
-
 app.get('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
   connection.query(obtieneDatosRut, [rut], (error, results) => {
@@ -103,38 +128,43 @@ app.get('/registros/:rut', (req, res) => {
     }
   });
 });
-/*
+
 /**
- * swagger
+ * @swagger
  * /registros/{rut}:
- *   put:
- *     summary: Actualizar un registro por su rut
- *     description: Actualiza un registro en la base de datos basado en el rut proporcionado.
+ *   post:
+ *     summary: Actualizar un registro
  *     tags: [Registros]
  *     parameters:
  *       - name: rut
  *         in: path
- *         description: Rut del registro a actualizar
  *         required: true
+ *         description: RUT del registro a actualizar
  *         schema:
  *           type: string
- *       - name: body
- *         in: body
- *         description: Datos del registro a actualizar
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             primer_nombre:
- *               type: string
- *             ape_pat:
- *               type: string
- *             ape_mat:
- *               type: string
- *             telefono:
- *               type: string
- *             direccion:
- *               type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               primer_nombre:
+ *                 type: string
+ *               ape_pat:
+ *                 type: string
+ *               ape_mat:
+ *                 type: string
+ *               celular:
+ *                 type: integer
+ *               direccion:
+ *                 type: string
+ *             required:
+ *               - primer_nombre
+ *               - ape_pat
+ *               - ape_mat
+ *               - celular
+ *               - direccion
  *     responses:
  *       200:
  *         description: Registro actualizado exitosamente
@@ -143,31 +173,138 @@ app.get('/registros/:rut', (req, res) => {
  *       500:
  *         description: Error al actualizar el registro
  */
-/*
-app.put('/registros/:rut', (req, res) => {
+app.use(express.json());
+
+app.post('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
-  const { primer_nombre, ape_pat, ape_mat, telefono, direccion } = req.body;
-  if (!primer_nombre || !ape_pat || !ape_mat || !telefono || !direccion) {
-   res.status(400).send('Faltan datos en el cuerpo de la solicitud');
-   console.log(req.body)
-   return;
+  const primer_nombre = req.body.primer_nombre;
+  const ape_pat = req.body.ape_pat;
+  const ape_mat = req.body.ape_mat;
+  const celular = req.body.celular;
+  const direccion = req.body.direccion;
+  console.log (primer_nombre, ape_pat, ape_mat, celular, direccion);
+  if (!primer_nombre || !ape_pat || !ape_mat || !celular || !direccion) {
+    res.status(400).send('Faltan datos en el cuerpo de la solicitud');
+    return;
   }
-  res.set('Content-Type', 'application/json');
-  // Consulta SQL para actualizar el registro en la base de datos
-  const val = [primer_nombre, ape_pat, ape_mat, telefono, direccion, rut];
-  connection.query(actualizaDatosxRut, val, (error, results) => {
-    //connection.query(actualizaDatosxRut, primer_nombre, ape_pat, ape_mat, telefono, direccion, rut, (error, results) => {
+  const values = [primer_nombre, ape_pat, ape_mat, celular, direccion, rut];
+  connection.query(actualizaDatosxRut, values, (error) => {
     if (error) {
       console.error('Error al actualizar el registro:', error);
       res.status(500).send('Error al actualizar el registro');
-      console.log(req.body)
     } else {
       res.send('Registro actualizado exitosamente');
-      console.log(req.body)
     }
   });
 });
-*/
+
+/**
+ * @swagger
+ * /registros:
+ *   post:
+ *     summary: Insertar un registro
+ *     tags: [Registros]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rut:
+ *                 type: integer
+ *               dv_rut:
+ *                 type: string
+ *               primer_nombre:
+ *                 type: string
+ *               segundo_nombre:
+ *                 type: string
+ *               ape_pat:
+ *                 type: string
+ *               ape_mat:
+ *                 type: string
+ *               fecha_nac:
+ *                 type: string
+ *                 format: date
+ *               sexo:
+ *                 type: string
+ *               celular:
+ *                 type: integer
+ *               direccion:
+ *                 type: string
+ *               cod_region:
+ *                 type: integer
+ *               cod_ciudad:
+ *                 type: integer
+ *               cod_provincia:
+ *                 type: integer
+ *               cod_comuna:
+ *                 type: integer
+ *               correo:
+ *                 type: string
+ *             required:
+ *               - rut
+ *               - dv_rut
+ *               - primer_nombre
+ *               - ape_pat
+ *               - fecha_nac
+ *               - sexo
+ *               - celular
+ *               - direccion
+ *               - cod_region
+ *               - cod_ciudad
+ *               - cod_provincia
+ *               - cod_comuna
+ *               - correo
+ *     responses:
+ *       200:
+ *         description: Registro insertado exitosamente
+ *       400:
+ *         description: Faltan datos en el cuerpo de la solicitud
+ *       500:
+ *         description: Error al insertar el registro
+ */
+
+app.post('/registros', (req, res) => {
+  const {
+    rut,
+    dv_rut,
+    primer_nombre,
+    segundo_nombre,
+    ape_pat,
+    ape_mat,
+    fecha_nac,
+    sexo,
+    celular,
+    direccion,
+    cod_region,
+    cod_ciudad,
+    cod_provincia,
+    cod_comuna,
+    correo
+  } = req.body;
+
+  // Validar que todos los campos requeridos estén presentes
+  if (!rut || !dv_rut || !primer_nombre || !ape_pat || !fecha_nac || !sexo || !celular || !direccion || !cod_region || !cod_ciudad || !cod_provincia || !cod_comuna || !correo) {
+  //if (!rut || !dv_rut || !primer_nombre || !ape_pat || !fecha_nac || !sexo || !celular || !direccion || !correo) {
+    res.status(400).send('Faltan datos en el cuerpo de la solicitud');
+    return;
+  }
+
+  // Consulta SQL para insertar el registro en la base de datos
+  const values = [rut, dv_rut, primer_nombre, segundo_nombre, ape_pat, ape_mat, fecha_nac, sexo, celular, direccion, cod_region, cod_ciudad, cod_provincia, cod_comuna, correo];
+
+  connection.query(insertDatos, values, (error, results) => {
+    if (error) {
+      console.error('Error al insertar el registro:', error);
+      res.status(500).send('Error al insertar el registro');
+    } else {
+      res.send('Registro insertado exitosamente');
+    }
+  });
+});
+
+
 
 /**
  * @swagger
@@ -193,7 +330,7 @@ app.put('/registros/:rut', (req, res) => {
 app.delete('/registros/:rut', (req, res) => {
   const rut = req.params.rut;
   // Ejecutar la consulta SQL
-  connection.query(deleteDatos, [rut], (error, results) => {
+  connection.query(deleteDatos, [rut], (error) => {
   //db.query(deleteDatos, [rut], (error, result) => {
     if (error) {
       // Manejar el error de la consulta
