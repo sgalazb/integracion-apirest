@@ -1,25 +1,28 @@
 //Persona
-const obtieneDatosRut= "SELECT p.rut  ,p.dv_rut  ,p.primer_nombre  ,p.ape_pat  ,p.ape_mat  ,date_format(p.fecha_nac,'%d/%m/%Y') 'Fecha Nac'  ,p.sexo  ,p.celular  ,p.direccion  ,p.correo  ,r.nombre 'Region'  ,c.nombre 'Ciudad'  ,co.nombre 'Comuna'  FROM   persona p  ,Regiones r  ,Ciudades c  ,Provincias pr  ,Comunas co  where   r.id = p.cod_region  and r.id = pr.id_region   and pr.id = c.id_provincia  and p.cod_provincia = pr.id  and p.cod_ciudad = c.id  and p.cod_comuna = co.id  and co.id_ciudad = c.id  and rut = ?";
-const obtieneDatos= "SELECT * FROM integracion.persona";
-const actualizaDatosxRut = 'UPDATE persona SET primer_nombre = ?, ape_pat = ?, ape_mat = ?, celular = ?, direccion = ? WHERE rut = ?';
+const obtieneDatosRut= "SELECT p.rut  ,p.dv_rut  ,p.primer_nombre  ,p.ape_pat  ,p.ape_mat  ,date_format(p.fecha_nac,'%d/%m/%Y') 'Fecha Nac'  ,p.sexo  ,p.celular  ,p.direccion  ,p.correo  ,r.region ,pr.provincia,co.comuna , rol.rol_descripcion 'Rol' FROM   persona p  ,regiones r  ,provincias pr  ,comunas co, roles rol where   p.REGION_ID = r.id and p.PROVINCIA_ID = pr.id and p.COMUNA_ID = co.id and r.id = pr.region_id and pr.id = co.provincia_id and p.ROL_ID = rol.rol_id and rut = ?";
+const obtieneDatos= 'SELECT RUT, DV_RUT, PRIMER_NOMBRE,SEGUNDO_NOMBRE, APE_PAT, APE_MAT, FECHA_NAC, SEXO, CELULAR, DIRECCION, CORREO, REGION_ID, PROVINCIA_ID, COMUNA_ID, ROL_ID, FUNCIONARIO FROM PERSONA';
+const actualizaDatosxRut = 'UPDATE persona SET primer_nombre = ?, ape_pat = ?, ape_mat = ?, celular = ?, direccion = ? CORREO = ?, REGION_ID = ?, PROVINCIA_ID = ?, COMUNA_ID = ?, ROL_ID = ?, FUNCIONARIO =? WHERE rut = ?';
 const deleteDatos = "DELETE FROM persona WHERE rut = ?";
-const insertDatos = 'INSERT INTO persona (rut, dv_rut, primer_nombre, segundo_nombre, ape_pat, ape_mat, fecha_nac, sexo, celular, direccion, cod_region, cod_ciudad, cod_provincia, cod_comuna, correo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+const insertDatos = 'INSERT INTO PERSONA (RUT, DV_RUT, PRIMER_NOMBRE,SEGUNDO_NOMBRE, APE_PAT, APE_MAT, FECHA_NAC, SEXO, CELULAR, DIRECCION, CORREO, REGION_ID, PROVINCIA_ID, COMUNA_ID, ROL_ID, FUNCIONARIO) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
  
+
 //Regiones
-const obtieneRegion = "SELECT r.id, r.nombre FROM regiones r";
-const obtieneProvincia = "SELECT pr.id, pr.nombre FROM provincias pr WHERE pr.id_region = ?";
-const obtieneCiudad = "SELECT c.id, c.nombre FROM Ciudades c WHERE c.id_provincia = ?";
-const obtieneComuna = "SELECT co.id, co.nombre FROM Comunas co WJERE co.id_ciudad = ?";
+const obtieneRegion = "select id, region, abreviatura, capital from regiones";
+const obtieneProvincia = "select id, provincia, region_id from provincias where region_id = ?";
+const obtieneComuna = "select id, comuna, provincia_id from comunas where provincia_id = ?";
+
+//login
+const validaLogin = 'SELECT P.CORREO, U.CLAVE, P.ROL_ID, ROL.ROL_DESCRIPCION, ROL.ABREVIATURA FROM PERSONA P, USUARIOS U, roles rol WHERE P.RUT = U.RUT AND LOWER(P.CORREO) = LOWER(?) AND U.CLAVE = SHA2(?, 256) AND P.ROL_ID = ROL.ROL_ID';
 
 // Exportar variables
 module.exports = {
     obtieneDatosRut,
     obtieneRegion,
     obtieneProvincia,
-    obtieneCiudad,
     obtieneComuna,
     actualizaDatosxRut,
     deleteDatos,
     obtieneDatos,
-    insertDatos
+    insertDatos,
+    validaLogin
   };
