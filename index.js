@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const app = express();
 // Importar variables de otro archivo
 const { port,port_db,urlbd,pwd,db } = require('./conf');
-const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  actualizaDatosxRut,  deleteDatos, obtieneDatos, insertDatos, obtieneComuna,validaLogin, obtieneProductosNombre} = require('./querys');
+const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  actualizaDatosxRut,  deleteDatos, obtieneDatos, insertDatos, obtieneComuna,validaLogin, obtieneProductosNombre, obtieneProductos, obtieneProductosCod} = require('./querys');
 // Importar y configurar Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -502,7 +502,15 @@ app.post('/login', (req, res) => {
     }
 
     if (results.length > 0) {
-      res.status(200).json({ message: 'Usuario autenticado con éxito' });
+      const usuario = results[0]; // Obtiene el primer resultado de la consulta
+
+      res.status(200).json({
+        message: 'Usuario autenticado con éxito',
+        correo: usuario.CORREO,
+        rolId: usuario.ROL_ID,
+        rolDescripcion: usuario.ROL_DESCRIPCION,
+        abreviatura: usuario.ABREVIATURA
+      });
     } else {
       res.status(401).json({ message: 'Credenciales inválidas' });
     }
@@ -531,7 +539,9 @@ app.post('/login', (req, res) => {
  */
 
 app.get('/productos/:producto', (req, res) => {
-  const producto = req.params.producto;
+  let producto = req.params.producto;
+  producto = decodeURI(producto); // Decodificar la URL
+  producto = normalizeText(producto.toLowerCase());
   const searchTerm = `%${producto}%`;
 
   connection.query(obtieneProductosNombre, [searchTerm], (error, results) => {
@@ -543,6 +553,74 @@ app.get('/productos/:producto', (req, res) => {
     }
   });
 });
+
+function normalizeText(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+
+/**
+ * @swagger
+ * /productos:
+ *   get:
+ *     summary: Obtener productos
+ *     description: Obtener la lista de productos
+ *     tags: [Productos]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
+
+app.get('/productos/', (req, res) => {
+  connection.query(obtieneProductos, (error, results) => {
+    if (error) {
+      console.error('Error al obtener los registros: ', error);
+      res.status(500).send('Error en el servidor');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+// Función para normalizar el texto (eliminar tildes y caracteres especiales)
+
+/**
+ * @swagger
+ * /prod/{id}:
+ *   get:
+ *     summary: obtener productos por id
+ *     description: obtener productos por id
+ *     tags: [Productos]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: obtener producto
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
+
+app.get('/prod/:id', (req, res) => {
+  const id = req.params.id;
+  connection.query(obtieneProductosCod, [id],(error, results) => {
+    if (error) {
+      console.error('Error al obtener los registros: ', error);
+      res.status(500).send('Error en el servidor');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 
 app.listen(port, () => {
   console.log(`Servidor API escuchando en el puerto ${port}`);
