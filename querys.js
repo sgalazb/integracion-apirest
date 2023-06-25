@@ -14,6 +14,14 @@ const obtieneComuna = "select id, comuna, provincia_id from comunas where provin
 //login
 const validaLogin = 'SELECT P.CORREO, U.CLAVE, P.ROL_ID, ROL.ROL_DESCRIPCION, ROL.ABREVIATURA FROM PERSONA P, USUARIOS U, roles rol WHERE P.RUT = U.RUT AND LOWER(P.CORREO) = LOWER(?) AND U.CLAVE = SHA2(?, 256) AND P.ROL_ID = ROL.ROL_ID';
 
+
+
+//productos
+//const obtieneProductosNombre = "SELECT distinct	P.ID,	P.CODIGO, C.CAT_DESC, P.NOMBRE_PRODUCTO, P.CODIGO_SERIE, P.MODELO, P.S_TOTAL, P.S_MAIPU, P.S_SANTIAGO, P.S_VITACURA, P.S_PROVIDENCIA,	P.PRECIO_COMPRA, P.PRECIO_VENTA, P.DESCRIPCION_PRODUCTO FROM PRODUCTOS P, CATEGORIAS C WHERE P.CATEGORIA = C.CAT_ID AND lower(P.NOMBRE_PRODUCTO) LIKE ?";
+
+const obtieneProductosNombre = "SELECT DISTINCT P.ID , P.CODIGO, C.CAT_DESC, P.NOMBRE_PRODUCTO, P.CODIGO_SERIE, P.MODELO, P.S_TOTAL 'STOCK TOTAL', P.S_MAIPU 'STOCK MAIPU', P.S_SANTIAGO 'STOCK SANTIAGO', P.S_VITACURA 'STOCK VITACURA', P.S_PROVIDENCIA 'STOCK PROVIDENCIA', P.PRECIO_COMPRA, P.PRECIO_VENTA, P.DESCRIPCION_PRODUCTO FROM PRODUCTOS P, CATEGORIAS C WHERE P.CATEGORIA = C.CAT_ID AND LOWER(P.NOMBRE_PRODUCTO) LIKE ?";
+
+
 // Exportar variables
 module.exports = {
     obtieneDatosRut,
@@ -24,5 +32,6 @@ module.exports = {
     deleteDatos,
     obtieneDatos,
     insertDatos,
-    validaLogin
+    validaLogin,
+    obtieneProductosNombre
   };

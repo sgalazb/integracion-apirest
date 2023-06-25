@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const app = express();
 // Importar variables de otro archivo
 const { port,port_db,urlbd,pwd,db } = require('./conf');
-const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  actualizaDatosxRut,  deleteDatos, obtieneDatos, insertDatos, obtieneComuna,validaLogin} = require('./querys');
+const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  actualizaDatosxRut,  deleteDatos, obtieneDatos, insertDatos, obtieneComuna,validaLogin, obtieneProductosNombre} = require('./querys');
 // Importar y configurar Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -509,6 +509,40 @@ app.post('/login', (req, res) => {
   });
 });
 
+/**
+ * @swagger
+ * /productos/{producto}:
+ *   get:
+ *     summary: obtener detalle de producto
+ *     description: obtener detalle de producto
+ *     tags: [Productos]
+ *     parameters:
+ *       - in: path
+ *         name: producto
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: obtener producto
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '500':
+ *         description: Error en el servidor
+ */
+
+app.get('/productos/:producto', (req, res) => {
+  const producto = req.params.producto;
+  const searchTerm = `%${producto}%`;
+
+  connection.query(obtieneProductosNombre, [searchTerm], (error, results) => {
+    if (error) {
+      console.error('Error al obtener los registros: ', error);
+      res.status(500).send('Error en el servidor');
+    } else {
+      res.json(results);
+    }
+  });
+});
 
 app.listen(port, () => {
   console.log(`Servidor API escuchando en el puerto ${port}`);
