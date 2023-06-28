@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const app = express();
+const { WebpayPlus } = require('transbank-sdk');
 // Importar variables de otro archivo
 const { port,port_db,urlbd,pwd,db } = require('./conf');
 const {obtieneDatosRut,  obtieneRegion,  obtieneProvincia,  actualizaDatosxRut,  deleteDatos, obtieneDatos, insertDatos, obtieneComuna,validaLogin, obtieneProductosNombre, obtieneProductos, obtieneProductosCod} = require('./querys');
@@ -622,8 +623,105 @@ app.get('/prod/:id', (req, res) => {
 });
 
 
+/**
+ * @swagger
+ * /api/transbank/transaction:
+ *   post:
+ *     summary: Crear una transacción en Transbank
+ *     tags: [Transbank]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               buyOrder:
+ *                 type: string
+ *               sessionId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               returnUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Transacción creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 transactionId:
+ *                   type: string
+ *                 url:
+ *                   type: string
+ *       400:
+ *         description: Parámetros inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+
+app.post('/api/transbank/transaction', async (req, res) => {
+  const { buyOrder, sessionId, amount, returnUrl } = req.body;
+
+  try {
+    const createResponse = await (new WebpayPlus.Transaction()).create(
+      buyOrder, 
+      sessionId, 
+      amount, 
+      returnUrl
+    );
+
+    // Devolver la respuesta de la llamada a la API de Transbank
+    res.json(createResponse);
+  } catch (error) {
+    // Manejar cualquier error y devolver una respuesta de error adecuada
+    res.status(500).json({ error: 'Error al crear la transacción' });
+  }
+});
 
 
+/**
+ * @swagger
+ * /api/transbank/confirmacion:
+ *   post:
+ *     summary: confirmar una transacción en Transbank
+ *     tags: [Transbank]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token_ws:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Transacción creada exitosamente
+ *       400:
+ *         description: Parámetros inválidos
+ */
+
+app.post('/api/transbank/confirmacion', async (req, res) => {
+  //const { ws_token } = req.body;
+
+  let token = req.body.token_ws;
+
+  try {
+    const commitResponse = await (new WebpayPlus.Transaction()).commit(token);
+    res.json(commitResponse);
+  } catch (error) {
+    // Manejar cualquier error y devolver una respuesta de error adecuada
+    res.status(500).json({ error: 'Error al crear la transacción' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Servidor API escuchando en el puerto ${port}`);
